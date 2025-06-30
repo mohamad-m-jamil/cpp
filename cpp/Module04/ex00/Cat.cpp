@@ -27,3 +27,18 @@ void Cat::makeSound() const
 {
     std::cout << "Meow! Meow!\n";
 }
+
+Cat::Cat(const Cat& other) : Animal(other)
+{
+    std::cout << "Cat copy constructor called\n";
+    this->type = other.type;
+}
+
+Cat& Cat::operator=(const Cat& other)
+{
+    std::cout << "Cat copy assignment operator called\n";
+    if (this != &other) {
+        this->type = other.type;
+    }
+    return *this;
+}

@@ -30,3 +30,18 @@ std::string WrongAnimal::getType() const
 {
     return type;
 }
+
+WrongAnimal::WrongAnimal(const WrongAnimal& other)
+{
+    std::cout << "WrongAnimal copy constructor called\n";
+    this->type = other.type;
+}
+
+WrongAnimal& WrongAnimal::operator=(const WrongAnimal& other)
+{
+    std::cout << "WrongAnimal copy assignment operator called\n";
+    if (this != &other) {
+        this->type = other.type;
+    }
+    return *this;
+}

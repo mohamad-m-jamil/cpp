@@ -30,7 +30,7 @@ void Dog::makeSound() const
     std::cout << "Woof! Woof!" << std::endl;
 }
 
-Dog::Dog(const Dog& other)
+Dog::Dog(const Dog& other) : Animal(other)
 {
     std::cout << "Dog copy constructor called" << std::endl;
     type = other.type;
