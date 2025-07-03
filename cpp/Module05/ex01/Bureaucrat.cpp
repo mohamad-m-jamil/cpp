@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/30 13:52:24 by mjamil            #+#    #+#             */
-/*   Updated: 2025/07/03 08:34:24 by mjamil           ###   ########.fr       */
+/*   Created: 2025/07/03 08:52:18 by mjamil            #+#    #+#             */
+/*   Updated: 2025/07/03 09:49:17 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,4 +75,16 @@ std::ostream& operator<<(std::ostream& os, const Bureaucrat& b)
 {
     os << b.getName() << ", bureaucrat grade " << b.getGrade();
     return os;
+}
+
+void Bureaucrat::signForm(Form& form)
+{
+    try {
+        form.beSigned(*this);  // We try to sign the form
+        std::cout << name << " signed " << form.getName() << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cout << name << " couldn't sign " << form.getName()
+                  << " because " << e.what() << std::endl;
+    }
 }
