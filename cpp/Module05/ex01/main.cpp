@@ -6,11 +6,10 @@
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/03 08:52:30 by mjamil            #+#    #+#             */
-/*   Updated: 2025/07/03 10:34:10 by mjamil           ###   ########.fr       */
+/*   Updated: 2025/07/07 07:49:41 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
 #include "Bureaucrat.hpp"
 #include "Form.hpp"
 

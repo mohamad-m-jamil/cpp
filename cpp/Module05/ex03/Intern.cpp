@@ -6,7 +6,7 @@
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/07 15:20:31 by mjamil            #+#    #+#             */
-/*   Updated: 2025/07/07 15:42:33 by mjamil           ###   ########.fr       */
+/*   Updated: 2025/07/09 09:47:24 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,18 +33,33 @@ Intern& Intern::operator=(const Intern& other)
 
 Intern::~Intern() {}
 
+static AForm* makeShrubbery(const std::string& target)
+{
+    return new ShrubberyCreationForm(target);
+}
+
+static AForm* makeRobotomy(const std::string& target)
+{
+    return new RobotomyRequestForm(target);
+}
+
+static AForm* makePresidential(const std::string& target)
+{
+    return new PresidentialPardonForm(target);
+}
+
 AForm* Intern::makeForm(const std::string& formName, const std::string& target)
 {
-    std::string forms[] = {
+    const std::string forms[] = {
         "shrubbery creation",
         "robotomy request",
         "presidential pardon"
     };
 
     AForm* (*formCreators[])(const std::string&) = {
-        [](const std::string& target) -> AForm* { return new ShrubberyCreationForm(target); },
-        [](const std::string& target) -> AForm* { return new RobotomyRequestForm(target); },
-        [](const std::string& target) -> AForm* { return new PresidentialPardonForm(target); }
+        makeShrubbery,
+        makeRobotomy,
+        makePresidential
     };
 
     for (int i = 0; i < 3; ++i)
