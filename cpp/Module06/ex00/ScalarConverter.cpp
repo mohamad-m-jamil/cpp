@@ -6,7 +6,7 @@
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 11:27:00 by mjamil            #+#    #+#             */
-/*   Updated: 2025/07/09 14:07:15 by mjamil           ###   ########.fr       */
+/*   Updated: 2025/07/20 15:10:17 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,19 @@ void ScalarConverter::convert(const std::string& literal) {
         literal == "+inf" || literal == "+inff" ||
         literal == "-inf" || literal == "-inff") {
         
-        std::string floatVal = (literal[literal.length() - 1] == 'f') ? literal : literal + "f";
-        std::string doubleVal = (literal[literal.length() - 1] == 'f') ? literal.substr(0, literal.length() - 1) : literal;
+        std::string floatVal;
+        std::string doubleVal;
+
+        if (literal[literal.length() - 1] == 'f')
+        {
+            floatVal = literal;
+            doubleVal = literal.substr(0, literal.length() - 1);
+        }
+        else
+        {
+            floatVal = literal + "f";
+            doubleVal = literal;
+        }
 
         std::cout << "char: impossible" << std::endl;
         std::cout << "int: impossible" << std::endl;
@@ -31,7 +42,8 @@ void ScalarConverter::convert(const std::string& literal) {
     }
 
     // Handle single char (like 'a')
-    if (literal.length() == 1 && !std::isdigit(literal[0])) {
+    if (literal.length() == 1 && !std::isdigit(literal[0]))
+    {
         char c = literal[0];
         int i = static_cast<int>(c);
         float f = static_cast<float>(c);
@@ -49,7 +61,8 @@ void ScalarConverter::convert(const std::string& literal) {
         std::istringstream iss(literal);
         int i;
         char extra;
-        if ((iss >> i) && !(iss >> extra)) {
+        if ((iss >> i) && !(iss >> extra))
+        {
             char c = static_cast<char>(i);
             float f = static_cast<float>(i);
             double d = static_cast<double>(i);
@@ -67,20 +80,25 @@ void ScalarConverter::convert(const std::string& literal) {
     }
 
     // Try float
-    if (literal[literal.length() - 1] == 'f') {
+    if (literal[literal.length() - 1] == 'f')
+    {
         std::string floatLiteral = literal.substr(0, literal.length() - 1);
         std::istringstream iss(floatLiteral);
         float f;
         char extra;
-        if ((iss >> f) && !(iss >> extra)) {
+        if ((iss >> f) && !(iss >> extra))
+        {
             int i = static_cast<int>(f);
             char c = static_cast<char>(f);
             double d = static_cast<double>(f);
 
-            if (std::isnan(f) || std::isinf(f)) {
+            if (std::isnan(f) || std::isinf(f))
+            {
                 std::cout << "char: impossible" << std::endl;
                 std::cout << "int: impossible" << std::endl;
-            } else {
+            }
+            else
+            {
                 if (i >= 32 && i <= 126)
                     std::cout << "char: '" << c << "'" << std::endl;
                 else
@@ -100,15 +118,19 @@ void ScalarConverter::convert(const std::string& literal) {
         std::istringstream iss(literal);
         double d;
         char extra;
-        if ((iss >> d) && !(iss >> extra)) {
+        if ((iss >> d) && !(iss >> extra))
+        {
             int i = static_cast<int>(d);
             char c = static_cast<char>(d);
             float f = static_cast<float>(d);
 
-            if (std::isnan(d) || std::isinf(d)) {
+            if (std::isnan(d) || std::isinf(d))
+            {
                 std::cout << "char: impossible" << std::endl;
                 std::cout << "int: impossible" << std::endl;
-            } else {
+            }
+            else
+            {
                 if (i >= 32 && i <= 126)
                     std::cout << "char: '" << c << "'" << std::endl;
                 else
