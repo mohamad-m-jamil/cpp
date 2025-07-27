@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.tpp": "cpp",
+        "compare": "cpp",
+        "type_traits": "cpp"
+    }
+}
