@@ -6,7 +6,7 @@
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 11:27:08 by mjamil            #+#    #+#             */
-/*   Updated: 2025/07/09 13:57:06 by mjamil           ###   ########.fr       */
+/*   Updated: 2025/07/27 15:43:26 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ class ScalarConverter
         ScalarConverter( const ScalarConverter&);
         ~ScalarConverter();
     public:
-         static void convert(const std::string& literal);
+        static void convert(const std::string& literal);
 };
 
 #endif

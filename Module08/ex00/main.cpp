@@ -15,11 +15,6 @@
 #include <list>
 #include "easyfind.hpp"
 
-#include <iostream>
-#include <vector>
-#include <list>
-#include "easyfind.hpp"
-
 int main()
 {
     std::vector<int> vec;
