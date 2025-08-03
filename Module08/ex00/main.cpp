@@ -34,17 +34,23 @@ int main()
     try {
         std::vector<int>::iterator it_vec = easyfind(vec, 30);
         std::cout << "Found in vector: " << *it_vec << std::endl;
-
-        std::list<int>::iterator it_lst = easyfind(lst, 25);
-        std::cout << "Found in list: " << *it_lst << std::endl;
-
-        std::vector<int>::iterator it_fail = easyfind(vec, 100);
-        std::cout << "Found: " << *it_fail << std::endl;
+    } catch (const std::exception& e) {
+        std::cout << "Error (vector 30): " << e.what() << std::endl;
     }
-    catch (const std::exception& e) {
-        std::cout << "Error: " << e.what() << std::endl;
+
+    try {
+        std::list<int>::iterator it_lst = easyfind(lst, 250);
+        std::cout << "Found in list: " << *it_lst << std::endl;
+    } catch (const std::exception& e) {
+        std::cout << "Error (list 250): " << e.what() << std::endl;
+    }
+
+    try {
+        std::vector<int>::iterator it_fail = easyfind(vec, 10);
+        std::cout << "Found in vector: " << *it_fail << std::endl;
+    } catch (const std::exception& e) {
+        std::cout << "Error (vector 10): " << e.what() << std::endl;
     }
 
     return 0;
 }
-
