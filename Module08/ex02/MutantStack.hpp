@@ -1,30 +1,36 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   iter.hpp                                           :+:      :+:    :+:   */
+/*   MutantStack.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/21 14:41:31 by mjamil            #+#    #+#             */
-/*   Updated: 2025/07/21 15:19:13 by mjamil           ###   ########.fr       */
+/*   Created: 2025/08/03 06:14:01 by mjamil            #+#    #+#             */
+/*   Updated: 2025/08/03 06:14:01 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef ITER_HPP
-#define ITER_HPP
+#ifndef MUTANTSTACK_HPP
+#define MUTANTSTACK_HPP
 
-#include <cstddef>
+#include <stack>
 #include <iostream>
+#include <iterator>
 
 template <typename T>
-void iter(T* array, size_t length, void (*func)(T&))
+class MutantStack : public std::stack<T>
 {
-    size_t i = 0;
-    while(i < length)
-    {
-        func(array[i]);
-        i++;
-    }
-}
+    public:
+        MutantStack();
+        ~MutantStack();
+        MutantStack(const MutantStack& other);
+        MutantStack& operator=(const MutantStack& other);
+
+        typedef typename std::stack<T>::container_type::iterator iterator;
+        iterator begin();
+        iterator end();
+};
+
+#include "MutantStack.tpp"
 
 #endif

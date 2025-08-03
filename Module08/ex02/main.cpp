@@ -5,21 +5,35 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/09 14:04:28 by mjamil            #+#    #+#             */
-/*   Updated: 2025/07/09 14:04:33 by mjamil           ###   ########.fr       */
+/*   Created: 2025/08/03 06:13:19 by mjamil            #+#    #+#             */
+/*   Updated: 2025/08/03 06:13:19 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ScalarConverter.hpp"
+#include "MutantStack.hpp"
 
-int main(int argc, char** argv)
+int main()
 {
-    if (argc != 2)
+    MutantStack<int> mstack;
+    mstack.push(5);
+    mstack.push(17);
+    std::cout << mstack.top() << std::endl;
+    mstack.pop();
+    std::cout << mstack.size() << std::endl;
+    mstack.push(3);
+    mstack.push(5);
+    mstack.push(737);
+    //[...]
+    mstack.push(0);
+    MutantStack<int>::iterator it = mstack.begin();
+    MutantStack<int>::iterator ite = mstack.end();
+    ++it;
+    --it;
+    while (it != ite)
     {
-        std::cerr << "Usage: ./convert <literal>" << std::endl;
-        return 1;
+        std::cout << *it << std::endl;
+        ++it;
     }
-
-    ScalarConverter::convert(argv[1]);
+    std::stack<int> s(mstack);
     return 0;
 }
