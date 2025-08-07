@@ -1,0 +1,137 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   BitcoinExchange.cpp                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/07 13:31:53 by mjamil            #+#    #+#             */
+/*   Updated: 2025/08/07 16:43:22 by mjamil           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "BitcoinExchange.hpp"
+
+BitcoinExchange::BitcoinExchange() {}
+
+BitcoinExchange::BitcoinExchange(const BitcoinExchange& other) {
+    (void)other;
+}
+
+BitcoinExchange& BitcoinExchange::operator=(const BitcoinExchange& other) {
+    (void)other;
+    return *this;
+}
+
+BitcoinExchange::~BitcoinExchange() {}
+
+// Load database from data.csv
+void BitcoinExchange::loadDatabase(const std::string &filename)
+{
+    std::ifstream file(filename.c_str());
+    if (!file.is_open())
+        throw std::runtime_error("Error: could not open database file.");
+
+    std::string line;
+    std::getline(file, line);
+
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string date;
+        std::string value;
+
+        if (!std::getline(ss, date, ',') || !std::getline(ss, value))
+            continue;
+
+        std::istringstream iss(value);
+        float rate;
+        if (!(iss >> rate))
+        {
+            std::cerr << "Warning: invalid line in DB: " << line << std::endl;
+            continue;
+        }
+
+        data[date] = rate;
+    }
+}
+
+
+// Get the closest date before or equal to the given date
+float BitcoinExchange::getRateForDate(const std::string &date) const
+{
+    std::map<std::string, float>::const_iterator it = data.lower_bound(date);
+    if (it == data.end() || it->first != date)
+    {
+        if (it == data.begin())
+            throw std::runtime_error("Error: no earlier date found in database.");
+        --it;
+    }
+    return it->second;
+}
+
+// Helper function to trim strings
+std::string BitcoinExchange::trim(const std::string &str) const
+{
+    size_t start = str.find_first_not_of(" \t");
+    size_t end = str.find_last_not_of(" \t");
+    return (start == std::string::npos) ? "" : str.substr(start, end - start + 1);
+}
+
+// Process input file
+void BitcoinExchange::processInput(const std::string &filename) const
+{
+    std::ifstream file(filename.c_str());
+    if (!file.is_open())
+        throw std::runtime_error("Error: could not open input file.");
+
+    std::string line;
+    std::getline(file, line);
+
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string date;
+        std::string valueStr;
+
+        if (!std::getline(ss, date, '|') || !std::getline(ss, valueStr))
+        {
+            std::cerr << "Error: bad input => " << line << std::endl;
+            continue;
+        }
+
+        date = trim(date);
+        valueStr = trim(valueStr);
+
+        std::istringstream iss(valueStr);
+        float value;
+        if (!(iss >> value))
+        {
+            std::cerr << "Error: invalid number => " << valueStr << std::endl;
+            continue;
+        }
+
+        if (value < 0)
+        {
+            std::cerr << "Error: not a positive number." << std::endl;
+            continue;
+        }
+
+        if (value > 1000)
+        {
+            std::cerr << "Error: too large a number." << std::endl;
+            continue;
+        }
+
+        try {
+            float rate = getRateForDate(date);
+            float result = rate * value;
+            std::cout << date << " => " << value << " = " << result << std::endl;
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << e.what() << std::endl;
+        }
+    }
+}
+
