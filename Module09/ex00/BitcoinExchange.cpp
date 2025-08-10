@@ -6,7 +6,7 @@
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/07 13:31:53 by mjamil            #+#    #+#             */
-/*   Updated: 2025/08/07 16:43:22 by mjamil           ###   ########.fr       */
+/*   Updated: 2025/08/10 16:50:11 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,18 @@
 
 BitcoinExchange::BitcoinExchange() {}
 
-BitcoinExchange::BitcoinExchange(const BitcoinExchange& other) {
-    (void)other;
+BitcoinExchange::BitcoinExchange(const BitcoinExchange& other)
+{
+    this->data = other.data;
 }
 
-BitcoinExchange& BitcoinExchange::operator=(const BitcoinExchange& other) {
-    (void)other;
+BitcoinExchange& BitcoinExchange::operator=(const BitcoinExchange& other)
+{
+    if (this != &other)
+        this->data = other.data;
     return *this;
 }
+
 
 BitcoinExchange::~BitcoinExchange() {}
 
