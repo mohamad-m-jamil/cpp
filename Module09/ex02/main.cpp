@@ -12,12 +12,21 @@
 
 #include "PmergeMe.hpp"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char** argv)
+{
+    if(argc < 2)
+    {
+        std::cerr << "Error: Not enough arguments." << std::endl;
+        return 1;
+    }
     try {
         PmergeMe sorter;
-        sorter.processAndSort(argc, argv);
-    } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        sorter.parseInput(argv);
+        sorter.sortWithVector();
+        sorter.sortWithDeque();
+        sorter.displayResults();
+    } catch (std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
     return 0;
