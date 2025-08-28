@@ -33,8 +33,9 @@ class PmergeMe
         double vector_time;
         double deque_time;
         std::vector<int> original_input;
-        size_t vec_comparisons;     // Counter for vector function
-        size_t deq_comparisons;     // Counter for deque function
+        bool is_recursive_call;
+        size_t vec_comparisons;   // Add this line
+        size_t deq_comparisons;   // Add this line
     public:
         PmergeMe();
         void parseInput(char** argv);

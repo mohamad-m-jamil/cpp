@@ -12,8 +12,7 @@
 
 #include "PmergeMe.hpp"
 
-PmergeMe::PmergeMe() : vec_comparisons(0), deq_comparisons(0) {}
-
+PmergeMe::PmergeMe() : is_recursive_call(false), vec_comparisons(0), deq_comparisons(0) {}
 void PmergeMe::parseInput(char** argv)
 {
     if (!argv[1])
@@ -68,299 +67,314 @@ void PmergeMe::parseInput(char** argv)
 
 void PmergeMe::sortWithVector()
 {
-   vec_comparisons = 0;  // Reset counter at start
-   struct timeval start, end;
-   gettimeofday(&start, NULL);
+    if (!is_recursive_call)
+        vec_comparisons = 0;
+    
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
 
-   if(vec_container.size() < 2)
-   {
-       gettimeofday(&end, NULL);
-       vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
-       return;
-   }
-   if(vec_container.size() == 2)
-   {
-       vec_comparisons++;
-       if(vec_container[0] > vec_container[1])
-       {
-           int i = vec_container[0];
-           vec_container[0] = vec_container[1];
-           vec_container[1] = i;
-       }
-       gettimeofday(&end, NULL);
-       vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
-       return;
-   }
+    if(vec_container.size() < 2)
+    {
+        gettimeofday(&end, NULL);
+        vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        return;
+    }
+    if(vec_container.size() == 2)
+    {
+        if (!is_recursive_call) vec_comparisons++;
+        if(vec_container[0] > vec_container[1])
+        {
+            int i = vec_container[0];
+            vec_container[0] = vec_container[1];
+            vec_container[1] = i;
+        }
+        gettimeofday(&end, NULL);
+        vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        return;
+    }
 
-   std::vector<std::pair<int,int> > pairs;
-   int leftover = -1;
+    std::vector<std::pair<int,int> > pairs;
+    int leftover = -1;
 
-   int i = 0;
-   while((size_t)(i + 1) < vec_container.size())
-   {
-       vec_comparisons++;
-       if(vec_container[i] > vec_container[i + 1])
-           pairs.push_back(std::make_pair(vec_container[i], vec_container[i + 1]));
-       else
-           pairs.push_back(std::make_pair(vec_container[i + 1], vec_container[i]));
-       i += 2;
-   }
-   if(vec_container.size() % 2 != 0)
-       leftover = vec_container.back();
+    int i = 0;
+    while((size_t)(i + 1) < vec_container.size())
+    {
+        if (!is_recursive_call) vec_comparisons++;
+        if(vec_container[i] > vec_container[i + 1])
+            pairs.push_back(std::make_pair(vec_container[i], vec_container[i + 1]));
+        else
+            pairs.push_back(std::make_pair(vec_container[i + 1], vec_container[i]));
+        i += 2;
+    }
+    if(vec_container.size() % 2 != 0)
+        leftover = vec_container.back();
 
-   std::vector<int> main_chain;
-   std::vector<int> pend_chain;
+    std::vector<int> main_chain;
+    std::vector<int> pend_chain;
 
-   i = 0;
-   while((size_t)i < pairs.size())
-   {
-       main_chain.push_back(pairs[i].first);
-       pend_chain.push_back(pairs[i].second);
-       i++;
-   }
-   if(leftover != -1)
-       pend_chain.push_back(leftover);
-   std::vector<int> original_vec = vec_container;
-   vec_container = main_chain;
-   
-   sortWithVector();
+    i = 0;
+    while((size_t)i < pairs.size())
+    {
+        main_chain.push_back(pairs[i].first);
+        pend_chain.push_back(pairs[i].second);
+        i++;
+    }
+    if(leftover != -1)
+        pend_chain.push_back(leftover);
+    std::vector<int> original_vec = vec_container;
+    vec_container = main_chain;
+    
+    is_recursive_call = true;   // Set flag before recursive call
+    sortWithVector();           // Recursive call
+    is_recursive_call = false;  // Reset flag after recursive call
 
-   std::vector<int> sorted_main = vec_container;
-   vec_container = original_vec;
+    std::vector<int> sorted_main = vec_container;
+    vec_container = original_vec;
 
-
-   if (pend_chain.empty())
-   {
-       vec_container = sorted_main;
-       gettimeofday(&end, NULL);
-       vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
-       return;
-   }
-   
-   std::vector<int> jacobsthal;
-   jacobsthal.push_back(1);
-   if (pend_chain.size() > 1) {
-       jacobsthal.push_back(1);
-       
-       while (jacobsthal.back() < (int)pend_chain.size())
-       {
-           int next = jacobsthal[jacobsthal.size()-1] + 2 * jacobsthal[jacobsthal.size()-2];
-           jacobsthal.push_back(next);
-       }
-   }
-   
-   std::vector<int> insertion_order;
-   
-   insertion_order.push_back(0);
-   
-   for (size_t i = 2; i < jacobsthal.size(); i++)
-   {
-       int start = std::min(jacobsthal[i], (int)pend_chain.size());
-       int end;
-       if (i > 2)
-           end = jacobsthal[i-1] + 1;
-       else
-           end = 2;
-       int j = start - 1;
-       while (j >= end - 1 && j >= 1)
-       {
-           insertion_order.push_back(j);
-           j--;
-       }
-   }
-   
-
-   std::vector<int> result = sorted_main;
-   
-   for (size_t i = 0; i < insertion_order.size(); i++)
-   {
-       int pend_index = insertion_order[i];
-       int element_to_insert = pend_chain[pend_index];
-       
-       int left = 0;
-       int right = result.size();
-       
-       if (pend_index == 0)
-           right = 1;
-       else if (pend_index < (int)pairs.size())
-       {
-           int partner = pairs[pend_index].first;
-           for (int j = 0; j < (int)result.size(); j++)
-           {
-               vec_comparisons++;
-               if (result[j] == partner)
-               {
-                   right = j + 1;
-                   break;
-               }
-           }
-       }
-       
-       while (left < right)
-       {
-           int mid = left + (right - left) / 2;
-           vec_comparisons++;
-           if (result[mid] > element_to_insert)
-               right = mid;
-           else
-               left = mid + 1;
-       }
-       
-       result.insert(result.begin() + left, element_to_insert);
-   }
-   
-   vec_container = result;
-   
-   gettimeofday(&end, NULL);
-   vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+    if (pend_chain.empty())
+    {
+        vec_container = sorted_main;
+        gettimeofday(&end, NULL);
+        vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        return;
+    }
+    
+    std::vector<int> jacobsthal;
+    jacobsthal.push_back(1);
+    if (pend_chain.size() > 1) {
+        jacobsthal.push_back(1);
+        
+        while (jacobsthal.back() < (int)pend_chain.size())
+        {
+            int next = jacobsthal[jacobsthal.size()-1] + 2 * jacobsthal[jacobsthal.size()-2];
+            jacobsthal.push_back(next);
+        }
+    }
+    
+    std::vector<int> insertion_order;
+    
+    insertion_order.push_back(0);
+    
+    for (size_t i = 2; i < jacobsthal.size(); i++)
+    {
+        int start = std::min(jacobsthal[i], (int)pend_chain.size());
+        int end;
+        if (i > 2)
+            end = jacobsthal[i-1] + 1;
+        else
+            end = 2;
+        int j = start - 1;
+        while (j >= end - 1 && j >= 1)
+        {
+            insertion_order.push_back(j);
+            j--;
+        }
+    }
+    
+    std::vector<int> result = sorted_main;
+    
+    for (size_t i = 0; i < insertion_order.size(); i++)
+    {
+        int pend_index = insertion_order[i];
+        int element_to_insert = pend_chain[pend_index];
+        
+        int left = 0;
+        int right = result.size();
+        
+        if (pend_index == 0)
+            right = 1;
+        else if (pend_index < (int)pairs.size())
+        {
+            int partner = pairs[pend_index].first;
+            for (int j = 0; j < (int)result.size(); j++)
+            {
+                if (result[j] == partner)
+                {
+                    right = j + 1;
+                    break;
+                }
+            }
+        }
+        
+        while (left < right)
+        {
+            int mid = left + (right - left) / 2;
+            if (!is_recursive_call) vec_comparisons++;
+            if (result[mid] > element_to_insert)
+                right = mid;
+            else
+                left = mid + 1;
+        }
+        
+        result.insert(result.begin() + left, element_to_insert);
+    }
+    
+    vec_container = result;
+    
+    gettimeofday(&end, NULL);
+    vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
 }
+
+
+
+
 ///////////////////////////////////////////////
+
+
+
+
 void PmergeMe::sortWithDeque()
 {
-   deq_comparisons = 0;  // Reset counter at start
-   struct timeval start, end;
-   gettimeofday(&start, NULL);
-   if(deq_container.size() < 2)
-   {
-       gettimeofday(&end, NULL);
-       deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
-       return;
-   }
-   if(deq_container.size() == 2)
-   {
-       deq_comparisons++;
-       if(deq_container[0] > deq_container[1])
-       {
-           int i = deq_container[0];
-           deq_container[0] = deq_container[1];
-           deq_container[1] = i;
-       }
-       gettimeofday(&end, NULL);
-       deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
-       return;
-   }
+    if (!is_recursive_call)
+        deq_comparisons = 0;
+    
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+    if(deq_container.size() < 2)
+    {
+        gettimeofday(&end, NULL);
+        deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        return;
+    }
+    if(deq_container.size() == 2)
+    {
+        if (!is_recursive_call) deq_comparisons++;
+        if(deq_container[0] > deq_container[1])
+        {
+            int i = deq_container[0];
+            deq_container[0] = deq_container[1];
+            deq_container[1] = i;
+        }
+        gettimeofday(&end, NULL);
+        deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        return;
+    }
 
-   std::deque<std::pair<int,int> > pairs;
-   int leftover = -1;
+    std::deque<std::pair<int,int> > pairs;
+    int leftover = -1;
 
-   int i = 0;
-   while((size_t)(i + 1) < deq_container.size())
-   {
-       deq_comparisons++;
-       if(deq_container[i] > deq_container[i + 1])
-           pairs.push_back(std::make_pair(deq_container[i], deq_container[i + 1]));
-       else
-           pairs.push_back(std::make_pair(deq_container[i + 1], deq_container[i]));
-       i += 2;
-   }
-   if(deq_container.size() % 2 != 0)
-       leftover = deq_container.back();
+    int i = 0;
+    while((size_t)(i + 1) < deq_container.size())
+    {
+        if (!is_recursive_call) deq_comparisons++;
+        if(deq_container[i] > deq_container[i + 1])
+            pairs.push_back(std::make_pair(deq_container[i], deq_container[i + 1]));
+        else
+            pairs.push_back(std::make_pair(deq_container[i + 1], deq_container[i]));
+        i += 2;
+    }
+    if(deq_container.size() % 2 != 0)
+        leftover = deq_container.back();
 
-   std::deque<int> main_chain;
-   std::deque<int> pend_chain;
+    std::deque<int> main_chain;
+    std::deque<int> pend_chain;
 
-   i = 0;
-   while((size_t)i < pairs.size())
-   {
-       main_chain.push_back(pairs[i].first);
-       pend_chain.push_back(pairs[i].second);
-       i++;
-   }
-   if(leftover != -1)
-       pend_chain.push_back(leftover);
-   std::deque<int> original_deque = deq_container;
-   deq_container = main_chain;
+    i = 0;
+    while((size_t)i < pairs.size())
+    {
+        main_chain.push_back(pairs[i].first);
+        pend_chain.push_back(pairs[i].second);
+        i++;
+    }
+    if(leftover != -1)
+        pend_chain.push_back(leftover);
+    std::deque<int> original_deque = deq_container;
+    deq_container = main_chain;
 
-   sortWithDeque();
+    is_recursive_call = true;
+    sortWithDeque();
+    is_recursive_call = false;
 
-   std::deque<int> sorted_main = deq_container;
-   deq_container = original_deque;
+    std::deque<int> sorted_main = deq_container;
+    deq_container = original_deque;
 
+    if (pend_chain.empty())
+    {
+        deq_container = sorted_main;
+        gettimeofday(&end, NULL);
+        deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        return;
+    }
 
-   if (pend_chain.empty())
-   {
-       deq_container = sorted_main;
-       gettimeofday(&end, NULL);
-       deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
-       return;
-   }
-
-   std::deque<int> jacobsthal;
-   jacobsthal.push_back(1);
-   if (pend_chain.size() > 1) {
-       jacobsthal.push_back(1);
-       
-       while (jacobsthal.back() < (int)pend_chain.size())
-       {
-           int next = jacobsthal[jacobsthal.size()-1] + 2 * jacobsthal[jacobsthal.size()-2];
-           jacobsthal.push_back(next);
-       }
-   }
-   
-   std::deque<int> insertion_order;
-   
-   insertion_order.push_back(0);
-   
-   for (size_t i = 2; i < jacobsthal.size(); i++)
-   {
-       int start = std::min(jacobsthal[i], (int)pend_chain.size());
-       int end;
-       if (i > 2)
-           end = jacobsthal[i-1] + 1;
-       else
-           end = 2;
-       int j = start - 1;
-       while (j >= end - 1 && j >= 1)
-       {
-           insertion_order.push_back(j);
-           j--;
-       }
-   }
-   
-   std::deque<int> result = sorted_main;
-   
-   for (size_t i = 0; i < insertion_order.size(); i++)
-   {
-       int pend_index = insertion_order[i];
-       int element_to_insert = pend_chain[pend_index];
-       
-       int left = 0;
-       int right = result.size();
-       
-       if (pend_index == 0)
-           right = 1;
-       else if (pend_index < (int)pairs.size())
-       {
-           int partner = pairs[pend_index].first;
-           for (int j = 0; j < (int)result.size(); j++)
-           {
-               deq_comparisons++;
-               if (result[j] == partner)
-               {
-                   right = j + 1;
-                   break;
-               }
-           }
-       }
-       
-       while (left < right)
-       {
-           int mid = left + (right - left) / 2;
-           deq_comparisons++;
-           if (result[mid] > element_to_insert)
-               right = mid;
-           else
-               left = mid + 1;
-       }
-       
-       result.insert(result.begin() + left, element_to_insert);
-   }
-   
-   deq_container = result;
-   
-   gettimeofday(&end, NULL);
-   deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+    std::deque<int> jacobsthal;
+    jacobsthal.push_back(1);
+    if (pend_chain.size() > 1) {
+        jacobsthal.push_back(1);
+        
+        while (jacobsthal.back() < (int)pend_chain.size())
+        {
+            int next = jacobsthal[jacobsthal.size()-1] + 2 * jacobsthal[jacobsthal.size()-2];
+            jacobsthal.push_back(next);
+        }
+    }
+    
+    std::deque<int> insertion_order;
+    
+    insertion_order.push_back(0);
+    
+    for (size_t i = 2; i < jacobsthal.size(); i++)
+    {
+        int start = std::min(jacobsthal[i], (int)pend_chain.size());
+        int end;
+        if (i > 2)
+            end = jacobsthal[i-1] + 1;
+        else
+            end = 2;
+        int j = start - 1;
+        while (j >= end - 1 && j >= 1)
+        {
+            insertion_order.push_back(j);
+            j--;
+        }
+    }
+    
+    std::deque<int> result = sorted_main;
+    
+    for (size_t i = 0; i < insertion_order.size(); i++)
+    {
+        int pend_index = insertion_order[i];
+        int element_to_insert = pend_chain[pend_index];
+        
+        int left = 0;
+        int right = result.size();
+        
+        if (pend_index == 0)
+            right = 1;
+        else if (pend_index < (int)pairs.size())
+        {
+            int partner = pairs[pend_index].first;
+            for (int j = 0; j < (int)result.size(); j++)
+            {
+                if (result[j] == partner)
+                {
+                    right = j + 1;
+                    break;
+                }
+            }
+        }
+        
+        while (left < right)
+        {
+            int mid = left + (right - left) / 2;
+            if (!is_recursive_call) deq_comparisons++;
+            if (result[mid] > element_to_insert)
+                right = mid;
+            else
+                left = mid + 1;
+        }
+        
+        result.insert(result.begin() + left, element_to_insert);
+    }
+    
+    deq_container = result;
+    
+    gettimeofday(&end, NULL);
+    deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
 }
+
+
+
+
 
 void PmergeMe::displayResults()
 {
