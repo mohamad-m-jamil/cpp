@@ -65,6 +65,9 @@ void PmergeMe::parseInput(char** argv)
     }
 }
 
+
+
+
 void PmergeMe::sortWithVector()
 {
     if (!is_recursive_call)
@@ -81,6 +84,7 @@ void PmergeMe::sortWithVector()
     }
     if(vec_container.size() == 2)
     {
+        // Count the single ordering comparison
         if (!is_recursive_call) vec_comparisons++;
         if(vec_container[0] > vec_container[1])
         {
@@ -99,6 +103,7 @@ void PmergeMe::sortWithVector()
     int i = 0;
     while((size_t)(i + 1) < vec_container.size())
     {
+        // Count one ordering comparison per pair
         if (!is_recursive_call) vec_comparisons++;
         if(vec_container[i] > vec_container[i + 1])
             pairs.push_back(std::make_pair(vec_container[i], vec_container[i + 1]));
@@ -179,10 +184,9 @@ void PmergeMe::sortWithVector()
         int element_to_insert = pend_chain[pend_index];
         
         if (pend_index == 0) {
-            // Insert first pend element at the beginning without comparison
+            // Insert first pend element at beginning without counting
             result.insert(result.begin(), element_to_insert);
         } else {
-            // For other elements, use binary search
             int left = 0;
             int right = result.size();
             
@@ -191,6 +195,7 @@ void PmergeMe::sortWithVector()
                 int partner = pairs[pend_index].first;
                 for (int j = 0; j < (int)result.size(); j++)
                 {
+                    // DON'T count partner search (== comparison)
                     if (result[j] == partner)
                     {
                         right = j + 1;
@@ -199,9 +204,11 @@ void PmergeMe::sortWithVector()
                 }
             }
             
+            // Binary search - count only ordering comparisons
             while (left < right)
             {
                 int mid = left + (right - left) / 2;
+                // Count this ordering comparison
                 if (!is_recursive_call) vec_comparisons++;
                 if (result[mid] > element_to_insert)
                     right = mid;
@@ -220,9 +227,7 @@ void PmergeMe::sortWithVector()
 }
 
 
-
 ///////////////////////////////////////////////
-
 
 
 
@@ -241,6 +246,7 @@ void PmergeMe::sortWithDeque()
     }
     if(deq_container.size() == 2)
     {
+        // Count the single ordering comparison
         if (!is_recursive_call) deq_comparisons++;
         if(deq_container[0] > deq_container[1])
         {
@@ -259,6 +265,7 @@ void PmergeMe::sortWithDeque()
     int i = 0;
     while((size_t)(i + 1) < deq_container.size())
     {
+        // Count one ordering comparison per pair
         if (!is_recursive_call) deq_comparisons++;
         if(deq_container[i] > deq_container[i + 1])
             pairs.push_back(std::make_pair(deq_container[i], deq_container[i + 1]));
@@ -338,35 +345,41 @@ void PmergeMe::sortWithDeque()
         int pend_index = insertion_order[i];
         int element_to_insert = pend_chain[pend_index];
         
-        int left = 0;
-        int right = result.size();
-        
-        if (pend_index == 0)
-            right = 1;
-        else if (pend_index < (int)pairs.size())
-        {
-            int partner = pairs[pend_index].first;
-            for (int j = 0; j < (int)result.size(); j++)
+        if (pend_index == 0) {
+            // Insert first pend element at beginning without counting
+            result.insert(result.begin(), element_to_insert);
+        } else {
+            int left = 0;
+            int right = result.size();
+            
+            if (pend_index < (int)pairs.size())
             {
-                if (result[j] == partner)
+                int partner = pairs[pend_index].first;
+                for (int j = 0; j < (int)result.size(); j++)
                 {
-                    right = j + 1;
-                    break;
+                    // DON'T count partner search (== comparison)
+                    if (result[j] == partner)
+                    {
+                        right = j + 1;
+                        break;
+                    }
                 }
             }
+            
+            // Binary search - count only ordering comparisons
+            while (left < right)
+            {
+                int mid = left + (right - left) / 2;
+                // Count this ordering comparison
+                if (!is_recursive_call) deq_comparisons++;
+                if (result[mid] > element_to_insert)
+                    right = mid;
+                else
+                    left = mid + 1;
+            }
+            
+            result.insert(result.begin() + left, element_to_insert);
         }
-        
-        while (left < right)
-        {
-            int mid = left + (right - left) / 2;
-            if (!is_recursive_call) deq_comparisons++;
-            if (result[mid] > element_to_insert)
-                right = mid;
-            else
-                left = mid + 1;
-        }
-        
-        result.insert(result.begin() + left, element_to_insert);
     }
     
     deq_container = result;
