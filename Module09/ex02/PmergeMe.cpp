@@ -124,9 +124,9 @@ void PmergeMe::sortWithVector()
     std::vector<int> original_vec = vec_container;
     vec_container = main_chain;
     
-    is_recursive_call = true;   // Set flag before recursive call
-    sortWithVector();           // Recursive call
-    is_recursive_call = false;  // Reset flag after recursive call
+    is_recursive_call = true;
+    sortWithVector();
+    is_recursive_call = false;
 
     std::vector<int> sorted_main = vec_container;
     vec_container = original_vec;
@@ -178,35 +178,39 @@ void PmergeMe::sortWithVector()
         int pend_index = insertion_order[i];
         int element_to_insert = pend_chain[pend_index];
         
-        int left = 0;
-        int right = result.size();
-        
-        if (pend_index == 0)
-            right = 1;
-        else if (pend_index < (int)pairs.size())
-        {
-            int partner = pairs[pend_index].first;
-            for (int j = 0; j < (int)result.size(); j++)
+        if (pend_index == 0) {
+            // Insert first pend element at the beginning without comparison
+            result.insert(result.begin(), element_to_insert);
+        } else {
+            // For other elements, use binary search
+            int left = 0;
+            int right = result.size();
+            
+            if (pend_index < (int)pairs.size())
             {
-                if (result[j] == partner)
+                int partner = pairs[pend_index].first;
+                for (int j = 0; j < (int)result.size(); j++)
                 {
-                    right = j + 1;
-                    break;
+                    if (result[j] == partner)
+                    {
+                        right = j + 1;
+                        break;
+                    }
                 }
             }
+            
+            while (left < right)
+            {
+                int mid = left + (right - left) / 2;
+                if (!is_recursive_call) vec_comparisons++;
+                if (result[mid] > element_to_insert)
+                    right = mid;
+                else
+                    left = mid + 1;
+            }
+            
+            result.insert(result.begin() + left, element_to_insert);
         }
-        
-        while (left < right)
-        {
-            int mid = left + (right - left) / 2;
-            if (!is_recursive_call) vec_comparisons++;
-            if (result[mid] > element_to_insert)
-                right = mid;
-            else
-                left = mid + 1;
-        }
-        
-        result.insert(result.begin() + left, element_to_insert);
     }
     
     vec_container = result;
@@ -214,7 +218,6 @@ void PmergeMe::sortWithVector()
     gettimeofday(&end, NULL);
     vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
 }
-
 
 
 
