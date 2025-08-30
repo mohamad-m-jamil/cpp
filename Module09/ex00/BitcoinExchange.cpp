@@ -6,7 +6,7 @@
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/07 13:31:53 by mjamil            #+#    #+#             */
-/*   Updated: 2025/08/10 16:50:11 by mjamil           ###   ########.fr       */
+/*   Updated: 2025/08/30 23:08:58 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,28 +37,41 @@ void BitcoinExchange::loadDatabase(const std::string &filename)
         throw std::runtime_error("Error: could not open database file.");
 
     std::string line;
-    std::getline(file, line);
-
+    if (!std::getline(file, line)) return;
+    size_t lineno = 1;
     while (std::getline(file, line))
     {
-        std::stringstream ss(line);
-        std::string date;
-        std::string value;
+        ++lineno;
+        if (!line.empty() && line[line.size() - 1] == '\r')line.erase(line.size() - 1);
+        if (line.empty()) continue;
 
-        if (!std::getline(ss, date, ',') || !std::getline(ss, value))
+        std::stringstream ss(line);
+        std::string date, value;
+        if (!std::getline(ss, date, ',') || !std::getline(ss, value)) {
+            std::cerr << "Warning: invalid CSV format at line " << lineno << ": " << line << "\n";
             continue;
+        }
+
+        date  = trim(date);
+        value = trim(value);
 
         std::istringstream iss(value);
         float rate;
-        if (!(iss >> rate))
+        if (!(iss >> rate)) {
+            std::cerr << "Warning: invalid number at line " << lineno << ": " << value << "\n";
+            continue;
+        }
+        iss >> std::ws;
+        if (!iss.eof())
         {
-            std::cerr << "Warning: invalid line in DB: " << line << std::endl;
+            std::cerr << "Warning: trailing garbage at line " << lineno << ": " << value << "\n";
             continue;
         }
 
         data[date] = rate;
     }
 }
+
 
 
 // Get the closest date before or equal to the given date
