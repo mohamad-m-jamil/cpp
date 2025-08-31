@@ -34,8 +34,8 @@ class PmergeMe
         double deque_time;
         std::vector<int> original_input;
         bool is_recursive_call;
-        size_t vec_comparisons;   // Add this line
-        size_t deq_comparisons;   // Add this line
+        size_t vec_comparisons;
+        size_t deq_comparisons;
     public:
         PmergeMe();
         void parseInput(char** argv);

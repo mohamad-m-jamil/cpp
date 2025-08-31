@@ -13,6 +13,11 @@
 #include "PmergeMe.hpp"
 
 PmergeMe::PmergeMe() : is_recursive_call(false), vec_comparisons(0), deq_comparisons(0) {}
+
+
+
+
+
 void PmergeMe::parseInput(char** argv)
 {
     if (!argv[1])
@@ -400,7 +405,13 @@ void PmergeMe::displayResults()
    }
    std::cout << std::endl;
    
-   std::cout << "After: ";
+   std::cout << "After for vec: ";
+   for (size_t i = 0; i < vec_container.size(); i++) {
+       std::cout << vec_container[i] << " ";
+   }
+   std::cout << std::endl;
+
+   std::cout << "After for deq: ";
    for (size_t i = 0; i < vec_container.size(); i++) {
        std::cout << vec_container[i] << " ";
    }
