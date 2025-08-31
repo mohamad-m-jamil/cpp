@@ -27,12 +27,12 @@ class RPN
         RPN& operator=(const RPN& other);
         ~RPN();
 
-        float evaluate(const std::string& expression);
+        int evaluate(const std::string& expression);
 
     private:
-        std::stack<float> operands;
+        std::stack<int> operands;
 
-        static float applyOperation(float a, float b, char op);
+        static int applyOperation(int a, int b, char op);
         bool isOperator(char c) const;
 };
 

@@ -75,32 +75,35 @@ void PmergeMe::parseInput(char** argv)
 
 void PmergeMe::sortWithVector()
 {
+    // Reset comparison counter if this is the top-level call
     if (!is_recursive_call)
         vec_comparisons = 0;
     
     clock_t start = clock();
 
+    // --- Base cases: handle very small inputs ---
     if(vec_container.size() < 2)
     {
+        // Nothing to sort
         clock_t end = clock();
         vector_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
         return;
     }
     if(vec_container.size() == 2)
     {
-        // Count the single ordering comparison
+        // One comparison to sort a pair
         if (!is_recursive_call) vec_comparisons++;
         if(vec_container[0] > vec_container[1])
-        {
-            int i = vec_container[0];
-            vec_container[0] = vec_container[1];
-            vec_container[1] = i;
-        }
+            std::swap(vec_container[0], vec_container[1]);
+
         clock_t end = clock();
         vector_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
         return;
     }
 
+    // ====================================================
+    // 1) PAIRING ELEMENTS
+    // ====================================================
     std::vector<std::pair<int,int> > pairs;
     int leftover = -1;
 
@@ -109,37 +112,51 @@ void PmergeMe::sortWithVector()
     {
         // Count one ordering comparison per pair
         if (!is_recursive_call) vec_comparisons++;
+
+        // Store pair as (larger, smaller)
         if(vec_container[i] > vec_container[i + 1])
             pairs.push_back(std::make_pair(vec_container[i], vec_container[i + 1]));
         else
             pairs.push_back(std::make_pair(vec_container[i + 1], vec_container[i]));
         i += 2;
     }
+    // Handle odd leftover element (goes to pend_chain later)
     if(vec_container.size() % 2 != 0)
         leftover = vec_container.back();
 
+    // ====================================================
+    // 2) BUILD MAIN & PEND CHAINS
+    // ====================================================
     std::vector<int> main_chain;
     std::vector<int> pend_chain;
 
     i = 0;
     while((size_t)i < pairs.size())
     {
+        // Larger elements → main chain
         main_chain.push_back(pairs[i].first);
+        // Smaller elements → pend chain
         pend_chain.push_back(pairs[i].second);
         i++;
     }
     if(leftover != -1)
         pend_chain.push_back(leftover);
+
+    // Save original input, then set container = main_chain
     std::vector<int> original_vec = vec_container;
     vec_container = main_chain;
     
+    // ====================================================
+    // 3) RECURSIVE SORT ON MAIN CHAIN
+    // ====================================================
     is_recursive_call = true;
-    sortWithVector();
+    sortWithVector();    // recursive call sorts the main_chain
     is_recursive_call = false;
 
     std::vector<int> sorted_main = vec_container;
-    vec_container = original_vec;
+    vec_container = original_vec;   // restore container to original
 
+    // If no pend elements, we are done
     if (pend_chain.empty())
     {
         vec_container = sorted_main;
@@ -149,6 +166,9 @@ void PmergeMe::sortWithVector()
         return;
     }
     
+    // ====================================================
+    // 4) BUILD JACOBSTHAL SEQUENCE
+    // ====================================================
     std::vector<int> jacobsthal;
     jacobsthal.push_back(1);
     if (pend_chain.size() > 1) {
@@ -161,8 +181,12 @@ void PmergeMe::sortWithVector()
         }
     }
     
+    // ====================================================
+    // 5) COMPUTE INSERTION ORDER FROM JACOBSTHAL
+    // ====================================================
     std::vector<int> insertion_order;
     
+    // First pend element is always inserted first
     insertion_order.push_back(0);
     
     for (size_t i = 2; i < jacobsthal.size(); i++)
@@ -173,6 +197,8 @@ void PmergeMe::sortWithVector()
             end = jacobsthal[i-1] + 1;
         else
             end = 2;
+
+        // Push indices in reverse range [end-1 .. start-1]
         int j = start - 1;
         while (j >= end - 1 && j >= 1)
         {
@@ -181,6 +207,9 @@ void PmergeMe::sortWithVector()
         }
     }
     
+    // ====================================================
+    // 6) INSERT PEND ELEMENTS INTO MAIN CHAIN
+    // ====================================================
     std::vector<int> result = sorted_main;
     
     for (size_t i = 0; i < insertion_order.size(); i++)
@@ -189,18 +218,18 @@ void PmergeMe::sortWithVector()
         int element_to_insert = pend_chain[pend_index];
         
         if (pend_index == 0) {
-            // Insert first pend element at beginning without counting
+            // Special rule: first pend element always goes to beginning
             result.insert(result.begin(), element_to_insert);
         } else {
             int left = 0;
             int right = result.size();
             
+            // Upper bound optimization: stop search at partner’s position
             if (pend_index < (int)pairs.size())
             {
                 int partner = pairs[pend_index].first;
                 for (int j = 0; j < (int)result.size(); j++)
                 {
-                    // DON'T count partner search (== comparison)
                     if (result[j] == partner)
                     {
                         right = j + 1;
@@ -209,11 +238,11 @@ void PmergeMe::sortWithVector()
                 }
             }
             
-            // Binary search - count only ordering comparisons
+            // Standard binary search in [left,right)
             while (left < right)
             {
                 int mid = left + (right - left) / 2;
-                // Count this ordering comparison
+                // Count only ordering comparisons (> or <)
                 if (!is_recursive_call) vec_comparisons++;
                 if (result[mid] > element_to_insert)
                     right = mid;
@@ -221,16 +250,21 @@ void PmergeMe::sortWithVector()
                     left = mid + 1;
             }
             
+            // Insert pend element at found position
             result.insert(result.begin() + left, element_to_insert);
         }
     }
     
     vec_container = result;
     
+    // ====================================================
+    // END: measure elapsed time
+    // ====================================================
     clock_t end = clock();
     vector_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
     vector_time = vector_time / 100000.0;
 }
+
 
 
 ///////////////////////////////////////////////

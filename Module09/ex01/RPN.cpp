@@ -28,7 +28,7 @@ RPN& RPN::operator=(const RPN& other)
 
 RPN::~RPN() {}
 
-float RPN::evaluate(const std::string& expression)
+int RPN::evaluate(const std::string& expression)
 {
     // Create a string stream from the input expression to read token by token
     std::istringstream iss(expression);
@@ -45,13 +45,13 @@ float RPN::evaluate(const std::string& expression)
                 throw std::runtime_error("Error: not enough operands.");
 
             // Pop the last two operands from the stack
-            float b = operands.top();  // Second operand (top of the stack)
+            int b = operands.top();  // Second operand (top of the stack)
             operands.pop();
-            float a = operands.top();  // First operand
+            int a = operands.top();  // First operand
             operands.pop();
 
             // Apply the operator to the two operands
-            float result = applyOperation(a, b, token[0]);
+            int result = applyOperation(a, b, token[0]);
 
             // Push the result back onto the stack
             operands.push(result);
@@ -60,9 +60,9 @@ float RPN::evaluate(const std::string& expression)
         {
             // Token is assumed to be a number
             std::istringstream tokenStream(token);
-            float value;
+            int value;
 
-            // Try converting the token to a float
+            // Try converting the token to an int
             if (!(tokenStream >> value))
                 throw std::runtime_error("Error: invalid token '" + token + "'.");
 
@@ -80,7 +80,7 @@ float RPN::evaluate(const std::string& expression)
 }
 
 
-float RPN::applyOperation(float a, float b, char op)
+int RPN::applyOperation(int a, int b, char op)
 {
     if(op == '+')
         return a + b;
