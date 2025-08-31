@@ -78,13 +78,12 @@ void PmergeMe::sortWithVector()
     if (!is_recursive_call)
         vec_comparisons = 0;
     
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    clock_t start = clock();
 
     if(vec_container.size() < 2)
     {
-        gettimeofday(&end, NULL);
-        vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        clock_t end = clock();
+        vector_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
         return;
     }
     if(vec_container.size() == 2)
@@ -97,8 +96,8 @@ void PmergeMe::sortWithVector()
             vec_container[0] = vec_container[1];
             vec_container[1] = i;
         }
-        gettimeofday(&end, NULL);
-        vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        clock_t end = clock();
+        vector_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
         return;
     }
 
@@ -144,8 +143,9 @@ void PmergeMe::sortWithVector()
     if (pend_chain.empty())
     {
         vec_container = sorted_main;
-        gettimeofday(&end, NULL);
-        vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        clock_t end = clock();
+        vector_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
+        vector_time = vector_time / 10000.0;
         return;
     }
     
@@ -227,8 +227,9 @@ void PmergeMe::sortWithVector()
     
     vec_container = result;
     
-    gettimeofday(&end, NULL);
-    vector_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+    clock_t end = clock();
+    vector_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
+    vector_time = vector_time / 100000.0;
 }
 
 
@@ -241,12 +242,13 @@ void PmergeMe::sortWithDeque()
     if (!is_recursive_call)
         deq_comparisons = 0;
     
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    clock_t start = clock();
+
     if(deq_container.size() < 2)
     {
-        gettimeofday(&end, NULL);
-        deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        clock_t end = clock();
+        deque_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
+        deque_time = deque_time / 100000.0;
         return;
     }
     if(deq_container.size() == 2)
@@ -259,8 +261,9 @@ void PmergeMe::sortWithDeque()
             deq_container[0] = deq_container[1];
             deq_container[1] = i;
         }
-        gettimeofday(&end, NULL);
-        deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        clock_t end = clock();
+        deque_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
+        deque_time = deque_time / 100000.0;
         return;
     }
 
@@ -306,8 +309,9 @@ void PmergeMe::sortWithDeque()
     if (pend_chain.empty())
     {
         deq_container = sorted_main;
-        gettimeofday(&end, NULL);
-        deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+        clock_t end = clock();
+        deque_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
+        deque_time = deque_time / 100000.0;
         return;
     }
 
@@ -388,9 +392,10 @@ void PmergeMe::sortWithDeque()
     }
     
     deq_container = result;
-    
-    gettimeofday(&end, NULL);
-    deque_time = (end.tv_sec - start.tv_sec) * 1000000.0 + (end.tv_usec - start.tv_usec);
+
+    clock_t end = clock();
+    deque_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
+    deque_time = deque_time / 100000.0;
 }
 
 
