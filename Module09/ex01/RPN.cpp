@@ -30,54 +30,44 @@ RPN::~RPN() {}
 
 int RPN::evaluate(const std::string& expression)
 {
-    // Create a string stream from the input expression to read token by token
     std::istringstream iss(expression);
     std::string token;
 
-    // Loop through each token separated by spaces
     while(iss >> token)
     {
-        // Check if the token is a single-character operator (+, -, *, /)
         if(token.size() == 1 && isOperator(token[0]))
         {
-            // Ensure there are at least two operands on the stack
             if(operands.size() < 2)
                 throw std::runtime_error("Error: not enough operands.");
 
-            // Pop the last two operands from the stack
-            int b = operands.top();  // Second operand (top of the stack)
-            operands.pop();
-            int a = operands.top();  // First operand
-            operands.pop();
+            int b = operands.top(); operands.pop();
+            int a = operands.top(); operands.pop();
 
-            // Apply the operator to the two operands
             int result = applyOperation(a, b, token[0]);
-
-            // Push the result back onto the stack
             operands.push(result);
         }
         else
         {
-            // Token is assumed to be a number
             std::istringstream tokenStream(token);
             int value;
 
-            // Try converting the token to an int
             if (!(tokenStream >> value))
                 throw std::runtime_error("Error: invalid token '" + token + "'.");
 
-            // Push the number onto the stack
+            // 🚨 Check if the number is a single-digit (0–9)
+            if (value < 0 || value > 9)
+                throw std::runtime_error("Error: numbers must be between 0 and 9.");
+
             operands.push(value);
         }
     }
 
-    // After processing all tokens, there should be exactly one number left on the stack
     if (operands.size() != 1)
         throw std::runtime_error("Error: invalid expression.");
 
-    // Return the final result
     return operands.top();
 }
+
 
 
 int RPN::applyOperation(int a, int b, char op)
