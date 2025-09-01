@@ -186,17 +186,13 @@ void PmergeMe::sortWithVector()
     // ====================================================
     std::vector<int> insertion_order;
     
-    // First pend element is always inserted first
+    // First pend element (index 0) is special - it goes first but with optimized search
     insertion_order.push_back(0);
     
     for (size_t i = 2; i < jacobsthal.size(); i++)
     {
         int start = std::min(jacobsthal[i], (int)pend_chain.size());
-        int end;
-        if (i > 2)
-            end = jacobsthal[i-1] + 1;
-        else
-            end = 2;
+        int end = jacobsthal[i-1] + 1;
 
         // Push indices in reverse range [end-1 .. start-1]
         int j = start - 1;
@@ -217,28 +213,32 @@ void PmergeMe::sortWithVector()
         int pend_index = insertion_order[i];
         int element_to_insert = pend_chain[pend_index];
         
-        if (pend_index == 0) {
-            // Special rule: first pend element always goes to beginning
-            result.insert(result.begin(), element_to_insert);
-        } else {
-            int left = 0;
-            int right = result.size();
-            
-            // Upper bound optimization: stop search at partner’s position
-            if (pend_index < (int)pairs.size())
+        int left = 0;
+        int right = result.size();
+        
+        // Upper bound optimization: stop search at partner's position
+        if (pend_index < (int)pairs.size())
+        {
+            int partner = pairs[pend_index].first;
+            for (int j = 0; j < (int)result.size(); j++)
             {
-                int partner = pairs[pend_index].first;
-                for (int j = 0; j < (int)result.size(); j++)
+                if (result[j] == partner)
                 {
-                    if (result[j] == partner)
-                    {
-                        right = j + 1;
-                        break;
-                    }
+                    right = j + 1;
+                    break;
                 }
             }
-            
-            // Standard binary search in [left,right)
+        }
+        
+        // Standard binary search in [left,right)
+        // Special case: if search space is 1 element, no comparison needed
+        if (right - left <= 1)
+        {
+            // Insert at position 'left' without comparison
+            result.insert(result.begin() + left, element_to_insert);
+        }
+        else
+        {
             while (left < right)
             {
                 int mid = left + (right - left) / 2;
@@ -266,9 +266,7 @@ void PmergeMe::sortWithVector()
 }
 
 
-
 ///////////////////////////////////////////////
-
 
 
 void PmergeMe::sortWithDeque()
@@ -277,37 +275,26 @@ void PmergeMe::sortWithDeque()
         deq_comparisons = 0;
     
     clock_t start = clock();
-
     if(deq_container.size() < 2)
     {
         clock_t end = clock();
         deque_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
-        deque_time = deque_time / 100000.0;
         return;
     }
     if(deq_container.size() == 2)
     {
-        // Count the single ordering comparison
         if (!is_recursive_call) deq_comparisons++;
         if(deq_container[0] > deq_container[1])
-        {
-            int i = deq_container[0];
-            deq_container[0] = deq_container[1];
-            deq_container[1] = i;
-        }
+            std::swap(deq_container[0], deq_container[1]);
         clock_t end = clock();
         deque_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
-        deque_time = deque_time / 100000.0;
         return;
     }
-
     std::deque<std::pair<int,int> > pairs;
     int leftover = -1;
-
     int i = 0;
     while((size_t)(i + 1) < deq_container.size())
     {
-        // Count one ordering comparison per pair
         if (!is_recursive_call) deq_comparisons++;
         if(deq_container[i] > deq_container[i + 1])
             pairs.push_back(std::make_pair(deq_container[i], deq_container[i + 1]));
@@ -317,10 +304,8 @@ void PmergeMe::sortWithDeque()
     }
     if(deq_container.size() % 2 != 0)
         leftover = deq_container.back();
-
     std::deque<int> main_chain;
     std::deque<int> pend_chain;
-
     i = 0;
     while((size_t)i < pairs.size())
     {
@@ -330,25 +315,21 @@ void PmergeMe::sortWithDeque()
     }
     if(leftover != -1)
         pend_chain.push_back(leftover);
-    std::deque<int> original_deque = deq_container;
+    std::deque<int> original_deq = deq_container;
     deq_container = main_chain;
-
     is_recursive_call = true;
     sortWithDeque();
     is_recursive_call = false;
-
     std::deque<int> sorted_main = deq_container;
-    deq_container = original_deque;
-
+    deq_container = original_deq;
     if (pend_chain.empty())
     {
         deq_container = sorted_main;
         clock_t end = clock();
         deque_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
-        deque_time = deque_time / 100000.0;
+        deque_time = deque_time / 10000.0;
         return;
     }
-
     std::deque<int> jacobsthal;
     jacobsthal.push_back(1);
     if (pend_chain.size() > 1) {
@@ -360,19 +341,12 @@ void PmergeMe::sortWithDeque()
             jacobsthal.push_back(next);
         }
     }
-    
     std::deque<int> insertion_order;
-    
     insertion_order.push_back(0);
-    
     for (size_t i = 2; i < jacobsthal.size(); i++)
     {
         int start = std::min(jacobsthal[i], (int)pend_chain.size());
-        int end;
-        if (i > 2)
-            end = jacobsthal[i-1] + 1;
-        else
-            end = 2;
+        int end = jacobsthal[i-1] + 1;
         int j = start - 1;
         while (j >= end - 1 && j >= 1)
         {
@@ -380,53 +354,42 @@ void PmergeMe::sortWithDeque()
             j--;
         }
     }
-    
     std::deque<int> result = sorted_main;
-    
     for (size_t i = 0; i < insertion_order.size(); i++)
     {
         int pend_index = insertion_order[i];
         int element_to_insert = pend_chain[pend_index];
-        
-        if (pend_index == 0) {
-            // Insert first pend element at beginning without counting
-            result.insert(result.begin(), element_to_insert);
-        } else {
-            int left = 0;
-            int right = result.size();
-            
-            if (pend_index < (int)pairs.size())
+        int left = 0;
+        int right = result.size();
+        if (pend_index < (int)pairs.size())
+        {
+            int partner = pairs[pend_index].first;
+            for (int j = 0; j < (int)result.size(); j++)
             {
-                int partner = pairs[pend_index].first;
-                for (int j = 0; j < (int)result.size(); j++)
+                if (result[j] == partner)
                 {
-                    // DON'T count partner search (== comparison)
-                    if (result[j] == partner)
-                    {
-                        right = j + 1;
-                        break;
-                    }
+                    right = j + 1;
+                    break;
                 }
             }
-            
-            // Binary search - count only ordering comparisons
+        }
+        if (right - left <= 1)
+            result.insert(result.begin() + left, element_to_insert);
+        else
+        {
             while (left < right)
             {
                 int mid = left + (right - left) / 2;
-                // Count this ordering comparison
                 if (!is_recursive_call) deq_comparisons++;
                 if (result[mid] > element_to_insert)
                     right = mid;
                 else
                     left = mid + 1;
             }
-            
             result.insert(result.begin() + left, element_to_insert);
         }
     }
-    
     deq_container = result;
-
     clock_t end = clock();
     deque_time = ((double)(end - start) / CLOCKS_PER_SEC) * 1000000.0;
     deque_time = deque_time / 100000.0;
@@ -451,8 +414,8 @@ void PmergeMe::displayResults()
    std::cout << std::endl;
 
    std::cout << "After for deq: ";
-   for (size_t i = 0; i < vec_container.size(); i++) {
-       std::cout << vec_container[i] << " ";
+   for (size_t i = 0; i < deq_container.size(); i++) {
+       std::cout << deq_container[i] << " ";
    }
    std::cout << std::endl;
    
