@@ -6,7 +6,7 @@
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/07 13:31:53 by mjamil            #+#    #+#             */
-/*   Updated: 2025/08/30 23:08:58 by mjamil           ###   ########.fr       */
+/*   Updated: 2025/09/01 05:42:04 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,8 +103,11 @@ void BitcoinExchange::processInput(const std::string &filename) const
         throw std::runtime_error("Error: could not open input file.");
 
     std::string line;
-    std::getline(file, line);
-
+    if(getline(file, line))
+    {
+        if (line != "date | value")
+            throw std::runtime_error("Warning: unexpected header format: " + line);
+    }
     while (std::getline(file, line))
     {
         std::stringstream ss(line);
