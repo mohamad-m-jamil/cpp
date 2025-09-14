@@ -6,7 +6,7 @@
 /*   By: mjamil <mjamil@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/07 13:31:53 by mjamil            #+#    #+#             */
-/*   Updated: 2025/09/01 05:42:04 by mjamil           ###   ########.fr       */
+/*   Updated: 2025/09/14 14:19:07 by mjamil           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,6 +95,38 @@ std::string BitcoinExchange::trim(const std::string &str) const
     return (start == std::string::npos) ? "" : str.substr(start, end - start + 1);
 }
 
+bool isLeapYear(int year)
+{
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
+
+bool isValidDate(const std::string& date)
+{
+    if (date.size() != 10 || date[4] != '-' || date[7] != '-')
+        return false;
+
+    int year, month, day;
+    std::istringstream ssYear(date.substr(0, 4));
+    std::istringstream ssMonth(date.substr(5, 2));
+    std::istringstream ssDay(date.substr(8, 2));
+
+    if (!(ssYear >> year) || !(ssMonth >> month) || !(ssDay >> day))
+        return false;
+
+    if (month < 1 || month > 12)
+        return false;
+
+    int daysInMonth[] = { 0, 31, 28, 31, 30, 31, 30,
+                             31, 31, 30, 31, 30, 31 };
+    if (isLeapYear(year))
+        daysInMonth[2] = 29;
+
+    if (day < 1 || day > daysInMonth[month])
+        return false;
+
+    return true;
+}
+
 // Process input file
 void BitcoinExchange::processInput(const std::string &filename) const
 {
@@ -122,6 +154,11 @@ void BitcoinExchange::processInput(const std::string &filename) const
 
         date = trim(date);
         valueStr = trim(valueStr);
+        if (!isValidDate(date))
+        {
+            std::cerr << "Error: bad input => " << line << std::endl;
+            continue;
+        }
 
         std::istringstream iss(valueStr);
         float value;
