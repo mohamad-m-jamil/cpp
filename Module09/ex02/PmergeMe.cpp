@@ -72,7 +72,6 @@ void PmergeMe::parseInput(char** argv)
 
 
 
-
 void PmergeMe::sortWithVector()
 {
     // Reset comparison counter if this is the top-level call
@@ -92,7 +91,7 @@ void PmergeMe::sortWithVector()
     if(vec_container.size() == 2)
     {
         // One comparison to sort a pair
-        if (!is_recursive_call) vec_comparisons++;
+        vec_comparisons++;
         if(vec_container[0] > vec_container[1])
             std::swap(vec_container[0], vec_container[1]);
 
@@ -111,7 +110,7 @@ void PmergeMe::sortWithVector()
     while((size_t)(i + 1) < vec_container.size())
     {
         // Count one ordering comparison per pair
-        if (!is_recursive_call) vec_comparisons++;
+        vec_comparisons++;
 
         // Store pair as (larger, smaller)
         if(vec_container[i] > vec_container[i + 1])
@@ -202,14 +201,18 @@ void PmergeMe::sortWithVector()
     // 5) BUILD JACOBSTHAL SEQUENCE
     // ====================================================
     std::vector<int> jacobsthal;
-    jacobsthal.push_back(1);
-    if (pend_chain.size() > 1) {
-        jacobsthal.push_back(1);
-        
-        while (jacobsthal.back() < (int)pend_chain.size())
-        {
-            int next = jacobsthal[jacobsthal.size()-1] + 2 * jacobsthal[jacobsthal.size()-2];
-            jacobsthal.push_back(next);
+    if (pend_chain.size() == 0) {
+        // No elements to insert
+    } else {
+        jacobsthal.push_back(0);
+        if (pend_chain.size() > 1) {
+            jacobsthal.push_back(1);
+            
+            while (jacobsthal.back() < (int)pend_chain.size())
+            {
+                int next = jacobsthal[jacobsthal.size()-1] + 2 * jacobsthal[jacobsthal.size()-2];
+                jacobsthal.push_back(next);
+            }
         }
     }
     
@@ -217,21 +220,26 @@ void PmergeMe::sortWithVector()
     // 6) COMPUTE INSERTION ORDER FROM JACOBSTHAL
     // ====================================================
     std::vector<int> insertion_order;
+    std::vector<bool> used(pend_chain.size() + 1, false);
     
-    // First pend element (index 0) is special - it goes first
-    insertion_order.push_back(0);
-    
-    for (size_t i = 2; i < jacobsthal.size(); i++)
-    {
-        int start = std::min(jacobsthal[i], (int)pend_chain.size());
-        int end = jacobsthal[i-1] + 1;
+    if (pend_chain.size() > 0) {
+        for (size_t i = 0; i < jacobsthal.size(); ++i) {
+            size_t x = jacobsthal[i];
+            while (x > 1 && x <= pend_chain.size()) {
+                if (!used[x]) {
+                    insertion_order.push_back(x - 1); // Convert to 0-based index
+                    used[x] = true;
+                }
+                x--;
+            }
+        }
 
-        // Push indices in reverse range [end-1 .. start-1]
-        int j = start - 1;
-        while (j >= end - 1 && j >= 1)
-        {
-            insertion_order.push_back(j);
-            j--;
+        // Ensure all remaining indices from 2 to pend_chain.size() are included
+        for (size_t x = 2; x <= pend_chain.size(); ++x) {
+            if (!used[x]) {
+                insertion_order.push_back(x - 1); // Convert to 0-based index
+                used[x] = true;
+            }
         }
     }
     
@@ -240,52 +248,50 @@ void PmergeMe::sortWithVector()
     // ====================================================
     std::vector<int> result = sorted_main;
     
+    // Insert first element (index 0) at the beginning
+    if (pend_chain.size() > 0) {
+        result.insert(result.begin(), pend_chain[0]);
+    }
+    
+    size_t searchLimit = 3;
+    
     for (size_t i = 0; i < insertion_order.size(); i++)
     {
         int pend_index = insertion_order[i];
-        if (pend_index >= (int)pend_chain.size()) continue;
+        if (pend_index >= (int)pend_chain.size() || pend_index == 0) continue;
+        
+        // Update search limit based on insertion order
+        if (i > 0 && insertion_order[i] > insertion_order[i - 1]) {
+            if (searchLimit <= result.size() / 2) {
+                searchLimit = 2 * searchLimit + 1;
+            } else {
+                searchLimit = result.size();
+            }
+        }
         
         int element_to_insert = pend_chain[pend_index];
         
+        size_t maxSearchIndex = std::min(searchLimit - 1, result.empty() ? size_t(0) : result.size() - 1);
+        
+        // Binary search with limited scope
         int left = 0;
-        int right = result.size();
-        
-        // Upper bound optimization: stop search at partner's position + 1
-        if (pend_index < (int)pairs.size())
-        {
-            // Find the partner in the result array
-            int partner = pairs[pend_index].first;
-            for (int j = 0; j < (int)result.size(); j++)
-            {
-                if (result[j] == partner)
-                {
-                    right = j + 1;
-                    break;
-                }
-            }
+        int right = static_cast<int>(maxSearchIndex);
+        if (right >= static_cast<int>(result.size())) {
+            right = static_cast<int>(result.size()) - 1;
         }
         
-        // Optimized binary search
-        if (right - left <= 1)
-        {
-            // No comparison needed for trivial insertion
-            result.insert(result.begin() + left, element_to_insert);
-        }
-        else
-        {
-            // Standard binary search with comparison counting
-            while (left < right)
-            {
-                int mid = left + (right - left) / 2;
-                if (!is_recursive_call) vec_comparisons++;
-                if (result[mid] > element_to_insert)
-                    right = mid;
-                else
-                    left = mid + 1;
-            }
+        while (left <= right) {
+            int mid = (left + right) / 2;
+            vec_comparisons++;
             
-            result.insert(result.begin() + left, element_to_insert);
+            if (result[mid] >= element_to_insert) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
         }
+        
+        result.insert(result.begin() + left, element_to_insert);
     }
     
     vec_container = result;
@@ -299,7 +305,20 @@ void PmergeMe::sortWithVector()
 }
 
 
+
+
+
+
+
+
+
 ///////////////////////////////////////////////
+
+
+
+
+
+
 
 
 void PmergeMe::sortWithDeque()
@@ -321,7 +340,7 @@ void PmergeMe::sortWithDeque()
     if(deq_container.size() == 2)
     {
         // One comparison to sort a pair
-        if (!is_recursive_call) deq_comparisons++;
+        deq_comparisons++;
         if(deq_container[0] > deq_container[1])
             std::swap(deq_container[0], deq_container[1]);
 
@@ -340,7 +359,7 @@ void PmergeMe::sortWithDeque()
     while((size_t)(i + 1) < deq_container.size())
     {
         // Count one ordering comparison per pair
-        if (!is_recursive_call) deq_comparisons++;
+        deq_comparisons++;
 
         // Store pair as (larger, smaller)
         if(deq_container[i] > deq_container[i + 1])
@@ -431,14 +450,18 @@ void PmergeMe::sortWithDeque()
     // 5) BUILD JACOBSTHAL SEQUENCE
     // ====================================================
     std::deque<int> jacobsthal;
-    jacobsthal.push_back(1);
-    if (pend_chain.size() > 1) {
-        jacobsthal.push_back(1);
-        
-        while (jacobsthal.back() < (int)pend_chain.size())
-        {
-            int next = jacobsthal[jacobsthal.size()-1] + 2 * jacobsthal[jacobsthal.size()-2];
-            jacobsthal.push_back(next);
+    if (pend_chain.size() == 0) {
+        // No elements to insert
+    } else {
+        jacobsthal.push_back(0);
+        if (pend_chain.size() > 1) {
+            jacobsthal.push_back(1);
+            
+            while (jacobsthal.back() < (int)pend_chain.size())
+            {
+                int next = jacobsthal[jacobsthal.size()-1] + 2 * jacobsthal[jacobsthal.size()-2];
+                jacobsthal.push_back(next);
+            }
         }
     }
     
@@ -446,21 +469,26 @@ void PmergeMe::sortWithDeque()
     // 6) COMPUTE INSERTION ORDER FROM JACOBSTHAL
     // ====================================================
     std::deque<int> insertion_order;
+    std::deque<bool> used(pend_chain.size() + 1, false);
     
-    // First pend element (index 0) is special - it goes first
-    insertion_order.push_back(0);
-    
-    for (size_t i = 2; i < jacobsthal.size(); i++)
-    {
-        int start = std::min(jacobsthal[i], (int)pend_chain.size());
-        int end = jacobsthal[i-1] + 1;
+    if (pend_chain.size() > 0) {
+        for (size_t i = 0; i < jacobsthal.size(); ++i) {
+            size_t x = jacobsthal[i];
+            while (x > 1 && x <= pend_chain.size()) {
+                if (!used[x]) {
+                    insertion_order.push_back(x - 1); // Convert to 0-based index
+                    used[x] = true;
+                }
+                x--;
+            }
+        }
 
-        // Push indices in reverse range [end-1 .. start-1]
-        int j = start - 1;
-        while (j >= end - 1 && j >= 1)
-        {
-            insertion_order.push_back(j);
-            j--;
+        // Ensure all remaining indices from 2 to pend_chain.size() are included
+        for (size_t x = 2; x <= pend_chain.size(); ++x) {
+            if (!used[x]) {
+                insertion_order.push_back(x - 1); // Convert to 0-based index
+                used[x] = true;
+            }
         }
     }
     
@@ -469,52 +497,50 @@ void PmergeMe::sortWithDeque()
     // ====================================================
     std::deque<int> result = sorted_main;
     
+    // Insert first element (index 0) at the beginning
+    if (pend_chain.size() > 0) {
+        result.insert(result.begin(), pend_chain[0]);
+    }
+    
+    size_t searchLimit = 3;
+    
     for (size_t i = 0; i < insertion_order.size(); i++)
     {
         int pend_index = insertion_order[i];
-        if (pend_index >= (int)pend_chain.size()) continue;
+        if (pend_index >= (int)pend_chain.size() || pend_index == 0) continue;
+        
+        // Update search limit based on insertion order
+        if (i > 0 && insertion_order[i] > insertion_order[i - 1]) {
+            if (searchLimit <= result.size() / 2) {
+                searchLimit = 2 * searchLimit + 1;
+            } else {
+                searchLimit = result.size();
+            }
+        }
         
         int element_to_insert = pend_chain[pend_index];
         
+        size_t maxSearchIndex = std::min(searchLimit - 1, result.empty() ? size_t(0) : result.size() - 1);
+        
+        // Binary search with limited scope
         int left = 0;
-        int right = result.size();
-        
-        // Upper bound optimization: stop search at partner's position + 1
-        if (pend_index < (int)pairs.size())
-        {
-            // Find the partner in the result array
-            int partner = pairs[pend_index].first;
-            for (int j = 0; j < (int)result.size(); j++)
-            {
-                if (result[j] == partner)
-                {
-                    right = j + 1;
-                    break;
-                }
-            }
+        int right = static_cast<int>(maxSearchIndex);
+        if (right >= static_cast<int>(result.size())) {
+            right = static_cast<int>(result.size()) - 1;
         }
         
-        // Optimized binary search
-        if (right - left <= 1)
-        {
-            // No comparison needed for trivial insertion
-            result.insert(result.begin() + left, element_to_insert);
-        }
-        else
-        {
-            // Standard binary search with comparison counting
-            while (left < right)
-            {
-                int mid = left + (right - left) / 2;
-                if (!is_recursive_call) deq_comparisons++;
-                if (result[mid] > element_to_insert)
-                    right = mid;
-                else
-                    left = mid + 1;
-            }
+        while (left <= right) {
+            int mid = (left + right) / 2;
+            deq_comparisons++;
             
-            result.insert(result.begin() + left, element_to_insert);
+            if (result[mid] >= element_to_insert) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
         }
+        
+        result.insert(result.begin() + left, element_to_insert);
     }
     
     deq_container = result;
